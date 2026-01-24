@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Logica nell'Informatica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #ffffff;
+            overflow: hidden; 
+        }
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .font-classic { font-family: 'Cinzel', serif; }
+        .font-serif-text { font-family: 'Playfair Display', serif; }
+
+        /* Animated Background Grid */
+        .bg-grid {
+            background-size: 50px 50px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            animation: moveGrid 20s linear infinite;
+        }
+        @keyframes moveGrid {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Transitions */
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glow-text { text-shadow: 0 0 20px rgba(56, 189, 248, 0.5); }
+        .cursor-blink { animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Slide Logic FIX */
+        .slide-hidden {
+            display: none !important; 
+        }
+        .slide-active {
+            animation: slideIn 0.5s ease-out forwards;
+            width: 100%;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Custom Scrollbar */
+        #main-container::-webkit-scrollbar { width: 8px; }
+        #main-container::-webkit-scrollbar-track { background: transparent; }
+        #main-container::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.5); border-radius: 4px; }
+    </style>
+</head>
+<body class="relative h-screen flex flex-col">
+
+    <!-- Background Layer -->
+    <div class="fixed inset-0 bg-grid z-0 pointer-events-none"></div>
+    <div class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 -z-10"></div>
+
+    <!-- Mobile Header -->
+    <header class="fixed top-0 left-0 w-full p-4 z-50 flex justify-between items-center md:hidden glass">
+        <span class="font-bold text-lg text-cyan-400">Logica<span class="text-white">.edu</span></span>
+        <button id="mobile-menu-btn" class="text-white hover:text-cyan-400 transition"><i class="fas fa-bars text-2xl"></i></button>
+    </header>
+
+    <!-- Desktop Menu Trigger -->
+    <button id="desktop-menu-btn" class="hidden md:flex fixed top-6 left-6 z-50 w-12 h-12 bg-indigo-600 hover:bg-indigo-500 rounded-full items-center justify-center shadow-lg transition-all hover:scale-110 group">
+        <i class="fas fa-bars text-white text-lg group-hover:rotate-180 transition-transform duration-300"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <nav id="sidebar" class="fixed top-0 left-0 h-full w-80 glass z-50 transform -translate-x-full pt-20 px-6 shadow-2xl border-r border-white/10 flex flex-col justify-between overflow-y-auto">
+        <div>
+            <div class="mb-8 pl-2">
+                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">Corso</h3>
+                <h2 class="text-2xl font-bold text-white">Indice Lezioni</h2>
+            </div>
+            <ul class="space-y-3">
+                <li>
+                    <button onclick="showView('home')" id="btn-home" class="w-full flex items-center p-3 rounded-lg bg-indigo-600/30 border border-indigo-500/50 text-white transition-all text-left">
+                        <i class="fas fa-home w-8 text-indigo-300"></i><span class="font-semibold ml-3">Home</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showView('intro')" id="btn-intro" class="w-full flex items-center p-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition group text-left">
+                        <i class="fas fa-scroll w-8 text-gray-500 group-hover:text-yellow-400 transition"></i><span class="ml-3">Introduzione</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="pb-8 text-center text-sm text-gray-500"><p>Prof. Patrick Militello</p><p>IIS Altiero Spinelli</p></div>
+    </nav>
+    <div id="overlay" class="fixed inset-0 bg-black/60 z-40 hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm"></div>
+
+    <!-- MAIN SCROLLABLE CONTAINER -->
+    <main id="main-container" class="flex-grow w-full h-full relative z-10 overflow-y-auto scroll-smooth">
+        
+        <!-- Content Wrapper -->
+        <div class="min-h-full flex flex-col justify-center items-center px-12 md:px-20 pt-20 pb-10 lg:pt-10 lg:pb-10">
+
+            <!-- === VIEW: HOME === -->
+            <div id="view-home" class="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center fade-in">
+                <div class="text-left space-y-6 order-1">
+                    <h1 class="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight leading-tight">
+                        La <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500 glow-text">Logica</span><span class="text-cyan-400 cursor-blink">_</span><br>nell'Informatica
+                    </h1>
+                    <p class="text-lg md:text-2xl text-gray-300 font-light border-l-4 border-indigo-500 pl-6 py-2">Rappresentare e aumentare la conoscenza all'interno del computer.</p>
+                    <div class="pt-4"><button onclick="showView('intro')" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-lg shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-1 flex items-center justify-center gap-2 w-full sm:w-auto">Inizia il Modulo <i class="fas fa-arrow-right"></i></button></div>
+                </div>
+                <div class="relative flex justify-center items-center h-[300px] sm:h-[400px] lg:h-[450px] order-2 w-full">
+                     <svg viewBox="0 0 500 450" class="w-full h-full max-h-[400px] drop-shadow-2xl" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter></defs>
+                        <path d="M120 140 C 120 200, 250 180, 250 240" stroke="#334155" stroke-width="2" fill="none" />
+                        <path d="M380 140 C 380 200, 250 180, 250 240" stroke="#334155" stroke-width="2" fill="none" />
+                        <path d="M250 300 L 250 360" stroke="#334155" stroke-width="2" />
+                        <g><rect x="50" y="80" width="140" height="60" rx="8" fill="#1e293b" stroke="#818cf8" stroke-width="2" /><text x="120" y="105" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="bold" font-family="monospace">PREMESSA MAGGIORE</text><text x="120" y="125" text-anchor="middle" fill="#fff" font-size="11" font-family="monospace">Se PIOVE &rarr; BAGNATO</text></g>
+                        <g><rect x="310" y="80" width="140" height="60" rx="8" fill="#1e293b" stroke="#22d3ee" stroke-width="2" /><text x="380" y="105" text-anchor="middle" fill="#67e8f9" font-size="10" font-weight="bold" font-family="monospace">PREMESSA MINORE</text><text x="380" y="125" text-anchor="middle" fill="#fff" font-size="12" font-family="monospace">PIOVE</text></g>
+                        <g><circle cx="250" cy="270" r="35" fill="#0f172a" stroke="#cbd5e1" stroke-width="2" /><g transform="translate(250, 270)"><path d="M-15 -15 L15 15 M15 -15 L-15 15" stroke="#cbd5e1" stroke-width="2"><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite" /></path><circle r="20" stroke="#64748b" stroke-width="1" fill="none" /></g><text x="250" y="325" text-anchor="middle" fill="#94a3b8" font-size="10" letter-spacing="2">INFERENZA</text></g>
+                        <g><rect x="180" y="360" width="140" height="60" rx="8" fill="#1e293b" stroke="#34d399" stroke-width="2"><animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" begin="1s" repeatCount="indefinite" /><animate attributeName="fill-opacity" values="0.8;1;0.8" dur="2s" begin="1s" repeatCount="indefinite" /></rect><text x="250" y="385" text-anchor="middle" fill="#6ee7b7" font-size="10" font-weight="bold" font-family="monospace">CONCLUSIONE</text><text x="250" y="405" text-anchor="middle" fill="#fff" font-size="14" font-family="monospace" font-weight="bold">È BAGNATO</text></g>
+                        <circle r="4" fill="#818cf8" filter="url(#glow)"><animateMotion dur="2s" repeatCount="indefinite" path="M120 140 C 120 200, 250 180, 250 240" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.2 1" /><animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" /></circle>
+                        <circle r="4" fill="#22d3ee" filter="url(#glow)"><animateMotion dur="2s" repeatCount="indefinite" path="M380 140 C 380 200, 250 180, 250 240" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.4 0 0.2 1" /><animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" /></circle>
+                        <circle cx="250" cy="270" r="35" stroke="#fff" stroke-width="2" fill="none" opacity="0"><animate attributeName="r" values="35;45" dur="1s" begin="0.5s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.5;0" dur="1s" begin="0.5s" repeatCount="indefinite" /></circle>
+                        <circle r="5" fill="#34d399" filter="url(#glow)"><animateMotion dur="2s" begin="1s" repeatCount="indefinite" path="M250 300 L 250 360" /><animate attributeName="opacity" values="0;1;0" dur="2s" begin="1s" repeatCount="indefinite" /></circle>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- === VIEW: INTRODUZIONE === -->
+            <div id="view-intro" class="hidden w-full h-full relative">
+                
+                <!-- Slide 1: Aristotele -->
+                <div id="intro-slide-1" class="slide-active max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mx-auto">
+                    <div class="space-y-6 order-1">
+                        <div class="inline-flex items-center px-3 py-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 text-yellow-200 text-xs font-classic tracking-widest mb-2"><i class="fas fa-landmark mr-2"></i> Storia</div>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-classic text-white leading-tight">Le Origini <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-amber-500">Filosofiche</span></h2>
+                        <div class="relative pl-6 border-l-2 border-slate-700">
+                            <i class="fas fa-quote-left absolute -top-4 -left-3 text-2xl text-slate-800 bg-slate-900 px-1"></i>
+                            <p class="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed font-light text-justify">
+                                <span class="text-4xl sm:text-5xl float-left mr-3 mt-[-5px] sm:mt-[-10px] font-classic text-indigo-400">D</span>alle origini aristoteliche fino al XIX secolo, la logica è stata utilizzata prevalentemente in ambito filosofico, soprattutto per sostenere argomentazioni di tipo metafisico. 
+                                <br><br>In questa lunga fase storica, la logica rimane strettamente legata allo studio del pensiero umano e alla riflessione sulla realtà.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="relative flex justify-center items-center h-[300px] md:h-[450px] order-2 bg-slate-800/30 rounded-2xl border border-white/5 p-2 backdrop-blur-sm overflow-hidden group w-full">
+                        <p class="absolute top-4 right-6 text-xs text-white/70 font-mono z-20 bg-black/50 px-2 py-1 rounded">fig_1.0: Riflessione</p>
+                        <div class="relative w-full h-full rounded-xl overflow-hidden">
+                            <!-- MODIFICA QUI: Sostituisci il link in src="" con il nome del tuo file (es. src="rodin.jpg") -->
+                            <img src="https://www.villegiardini.it/wp-content/uploads/2018/02/IL-PENSATORE-RODIN.jpg" class="w-full h-full object-cover object-top transform transition duration-1000 group-hover:scale-110 filter sepia-[0.3] brightness-75 contrast-125"
+                                 onerror="this.src='https://placehold.co/400x500/1e293b/ffffff?text=Il+Pensatore'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-indigo-900/20 to-transparent opacity-80"></div>
+                        </div>
+                        <div class="absolute bottom-6 left-6 z-20"><p class="text-white font-classic text-xl">Auguste Rodin</p><p class="text-indigo-300 text-sm">Le Penseur (1902)</p></div>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Leibniz -->
+                <div id="intro-slide-2" class="slide-hidden max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mx-auto">
+                    <div class="relative flex justify-center items-center h-[300px] md:h-[450px] order-2 lg:order-1 bg-slate-800/30 rounded-2xl border border-white/5 p-2 backdrop-blur-sm overflow-hidden group w-full">
+                        <p class="absolute top-4 right-6 text-xs text-white/70 font-mono z-20 bg-black/50 px-2 py-1 rounded">fig_1.1: Calcolo</p>
+                        <div class="relative w-full h-full rounded-xl overflow-hidden">
+                            <!-- MODIFICA QUI: Sostituisci il link qui sotto con la tua immagine di Leibniz -->
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/Gottfried_Wilhelm_von_Leibniz.jpg" class="w-full h-full object-cover object-top transform transition duration-1000 group-hover:scale-105 filter sepia-[0.2] contrast-110"
+                                 onerror="this.src='https://placehold.co/400x500/1e293b/ffffff?text=Leibniz'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80"></div>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full text-center opacity-0 group-hover:opacity-100 transition duration-500">
+                                 <span class="font-classic text-4xl text-white/20 tracking-[0.5em] font-bold">CALCULEMUS</span>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-6 left-6 z-20"><p class="text-white font-classic text-xl">Gottfried W. Leibniz</p><p class="text-indigo-300 text-sm">1646–1716</p></div>
+                    </div>
+
+                    <div class="space-y-6 order-1 lg:order-2">
+                        <div class="inline-flex items-center px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 text-xs font-classic tracking-widest mb-2"><i class="fas fa-calculator mr-2"></i> Evoluzione</div>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-classic text-white leading-tight">La Svolta <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-blue-500">Matematica</span></h2>
+                        <p class="text-base sm:text-lg text-gray-300 leading-relaxed font-light text-justify">
+                            A partire dalla seconda metà dell’Ottocento, tuttavia, si avvia una trasformazione profonda: la logica inizia a emanciparsi dalla psicologia e dalla metafisica e ad assumere un carattere sempre più matematico e formale. Uno dei primi tentativi di concepire la logica come un vero e proprio calcolo risale a Gottfried Wilhelm Leibniz (1646–1716). Egli immaginava un linguaggio simbolico universale capace di trattare i ragionamenti nello stesso modo in cui l’algebra tratta le operazioni sui numeri. In una celebre intuizione, Leibniz affermava quanto segue:
+                        </p>
+                        <div class="relative bg-[#1e293b] p-6 rounded-lg border-l-4 border-cyan-500 shadow-xl">
+                            <i class="fas fa-quote-right absolute top-4 right-4 text-slate-700 text-3xl"></i>
+                            <p class="font-serif-text italic text-gray-300 text-sm md:text-base leading-relaxed">
+                                “Le verità vengono dedotte dalla mente umana in virtù di un metodo di calcolo come nell’aritmetica e nell’algebra e quindi, quando sorgeranno controversie fra due filosofi, non sarà più necessaria una discussione. Sarà sufficiente che essi prendano in mano le penne, si siedano di fronte agli abachi e si dicano l’un l’altro: <span class="text-cyan-400 font-bold not-italic">calculemus!</span>”
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Boole, Frege/Russell, Peano -->
+                <div id="intro-slide-3" class="slide-hidden max-w-4xl w-full flex flex-col items-center gap-12 px-2 mx-auto pb-32">
+                    <h2 class="text-4xl sm:text-5xl font-bold font-classic text-white text-center mb-6">La Formalizzazione <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-500">Logica</span></h2>
+                    
+                    <div class="flex flex-col gap-16 w-full"> 
+                        <!-- Card 1: Boole -->
+                        <div class="bg-slate-800/40 p-8 rounded-3xl border border-white/5 backdrop-blur-sm flex flex-col gap-6 group hover:bg-slate-800/60 transition duration-300">
+                            <div class="flex items-center gap-6">
+                                <!-- MODIFICA QUI: Ritratto di Boole -->
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/c/ce/George_Boole_color.jpg" alt="George Boole" class="w-24 h-24 rounded-full object-cover object-top border-2 border-green-400 filter sepia-[0.3]"
+                                     onerror="this.src='https://placehold.co/100x100/1e293b/ffffff?text=Boole'">
+                                <div>
+                                    <h4 class="font-classic text-3xl text-white">George Boole</h4>
+                                    <p class="text-base text-green-300">1815–1864</p>
+                                </div>
+                            </div>
+                            <p class="text-lg text-gray-300 leading-relaxed font-light text-justify">
+                                Questa visione trova una prima realizzazione concreta nel XIX secolo con George Boole, considerato il fondatore della logica matematica. Boole applicò alla logica aristotelica i metodi dell’algebra, trasformando le proposizioni in oggetti formali su cui eseguire operazioni. In questo modo rese finalmente operativa l’idea leibniziana di una logica come calcolo.
+                            </p>
+                            <div class="mt-4 w-full">
+                                <div class="rounded-xl overflow-hidden border border-white/10 h-64 bg-slate-900/50">
+                                    <!-- MODIFICA QUI: Immagine Tavole di Verità -->
+                                    <img src="bool.jpg" 
+                                         alt="Tavole di Verità" 
+                                         class="w-full h-full object-contain p-4 filter invert"
+                                         onerror="this.src='https://placehold.co/600x300/1e293b/ffffff?text=Tavole+di+Verit%C3%A0'">
+                                </div>
+                                <p class="text-sm text-center text-gray-400 mt-3 font-mono">Logica Binaria</p>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Frege & Russell -->
+                        <div class="bg-slate-800/40 p-8 rounded-3xl border border-white/5 backdrop-blur-sm flex flex-col gap-6 group hover:bg-slate-800/60 transition duration-300">
+                            <div class="flex items-center gap-6">
+                                <!-- MODIFICA QUI: Ritratto di Russell -->
+                                <img src="https://www.pianobedizioni.com/wp-content/uploads/2017/12/640px-Bertrand_Russell_1957.jpg" alt="Bertrand Russell" class="w-24 h-24 rounded-full object-cover object-top border-2 border-blue-400 filter sepia-[0.3]"
+                                     onerror="this.src='https://placehold.co/100x100/1e293b/ffffff?text=Russell'">
+                                <div>
+                                    <h4 class="font-classic text-3xl text-white">Frege & Russell</h4>
+                                    <p class="text-base text-blue-300">Fondamenti</p>
+                                </div>
+                            </div>
+                            <p class="text-lg text-gray-300 leading-relaxed font-light text-justify">
+                                Il progetto viene poi ampliato e raffinato da Gottlob Frege (1848–1925), che sviluppò un linguaggio logico estremamente preciso. L’obiettivo era fondare l'intera matematica sulla logica. Su questa linea lavorò Bertrand Russell (1872–1970) con i <em>Principia Mathematica</em>, tentando di derivare la matematica da principi logici ed evidenziando al contempo i limiti dei sistemi logici dell'epoca (Paradosso di Russell).
+                            </p>
+                            <div class="mt-4 w-full">
+                                <div class="rounded-xl overflow-hidden border border-white/10 h-64 bg-slate-900/50">
+                                    <!-- MODIFICA QUI: Immagine Principia Mathematica -->
+                                    <img src="https://pic.blog.plover.com/math/PM-translation/1+1=2-translation.png" 
+                                         alt="Principia Mathematica" 
+                                         class="w-full h-full object-contain object-center filter contrast-125"
+                                         onerror="this.src='https://placehold.co/600x300/1e293b/ffffff?text=Principia+Mathematica'">
+                                </div>
+                                <p class="text-sm text-center text-gray-400 mt-3 font-mono">Principia Mathematica (1+1=2)</p>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Peano -->
+                        <div class="bg-slate-800/40 p-8 rounded-3xl border border-white/5 backdrop-blur-sm flex flex-col gap-6 group hover:bg-slate-800/60 transition duration-300">
+                            <div class="flex items-center gap-6">
+                                <!-- MODIFICA QUI: Ritratto di Peano -->
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Giuseppe_Peano.jpg/250px-Giuseppe_Peano.jpg" alt="Giuseppe Peano" class="w-24 h-24 rounded-full object-cover object-top border-2 border-red-400 filter sepia-[0.3]"
+                                     onerror="this.src='https://placehold.co/100x100/1e293b/ffffff?text=Peano'">
+                                <div>
+                                    <h4 class="font-classic text-3xl text-white">Giuseppe Peano</h4>
+                                    <p class="text-base text-red-300">1858–1932</p>
+                                </div>
+                            </div>
+                            <p class="text-lg text-gray-300 leading-relaxed font-light text-justify">
+                                Infine, Giuseppe Peano contribuì a conferire alla logica una notazione simbolica rigorosa e standardizzata, rendendo più chiara ed efficace l’espressione formale dei concetti matematici. Grazie a questi sviluppi, si gettarono le basi della logica formale moderna.
+                            </p>
+                            <div class="mt-4 w-full">
+                                <div class="rounded-xl overflow-hidden border border-white/10 h-64 bg-slate-900/50">
+                                    <!-- MODIFICA QUI: Immagine Curva di Peano -->
+                                    <img src="induzione.png" 
+                                         alt="Curva di Peano" 
+                                         class="w-full h-full object-contain p-4"
+                                         onerror="this.src='https://placehold.co/600x300/1e293b/ffffff?text=Curva+di+Peano'">
+                                </div>
+                                <p class="text-sm text-center text-gray-400 mt-3 font-mono">Notazione e Curva di Peano</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 4: Correttezza del Ragionamento -->
+                <div id="intro-slide-4" class="slide-hidden max-w-7xl w-full flex flex-col items-center gap-8 px-2 mx-auto pb-32">
+                    <h2 class="text-3xl sm:text-4xl font-bold font-classic text-white text-center">La Correttezza <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Logica</span></h2>
+                    
+                    <div class="max-w-4xl text-center">
+                        <p class="text-base sm:text-lg text-gray-300 leading-relaxed font-light">
+                            In questo nuovo quadro, la logica si occupa della correttezza dei ragionamenti: un ragionamento è corretto quando ogni passaggio è valido e la conclusione segue necessariamente dalle premesse secondo regole precise. La logica non si interessa al contenuto delle affermazioni, ma alla forma del ragionamento stesso.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full mt-4">
+                        <!-- Card: Correct Reasoning (Green) -->
+                        <div class="bg-slate-800/40 p-6 rounded-2xl border border-emerald-500/30 backdrop-blur-sm flex flex-col gap-4 group hover:bg-slate-800/60 transition duration-300 relative overflow-hidden">
+                            <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition duration-500"></div>
+                            
+                            <div class="flex items-center gap-3 border-b border-emerald-500/20 pb-3 mb-2">
+                                <div class="w-10 h-10 rounded-full bg-emerald-900/50 flex items-center justify-center border border-emerald-500/50">
+                                    <i class="fas fa-check text-emerald-400 text-xl"></i>
+                                </div>
+                                <h3 class="font-classic text-xl text-emerald-200">Ragionamento Corretto</h3>
+                            </div>
+
+                            <div class="bg-slate-900/60 p-4 rounded-lg font-mono text-sm border border-emerald-500/10 space-y-2 relative">
+                                <!-- Mini SVG Logic Diagram: Subset -->
+                                <svg class="absolute top-2 right-2 w-16 h-12 opacity-50" viewBox="0 0 100 80">
+                                    <circle cx="50" cy="40" r="35" fill="none" stroke="#34d399" stroke-width="2" />
+                                    <circle cx="50" cy="40" r="20" fill="none" stroke="#34d399" stroke-width="2" />
+                                    <circle cx="50" cy="40" r="3" fill="#34d399" />
+                                </svg>
+                                <p><span class="text-emerald-500">Premessa 1:</span> Tutti i mammiferi sono animali.</p>
+                                <p><span class="text-emerald-500">Premessa 2:</span> Il cane è un mammifero.</p>
+                                <div class="w-full h-px bg-emerald-500/30 my-2"></div>
+                                <p><span class="text-emerald-400 font-bold">Conclusione:</span> Il cane è un animale.</p>
+                            </div>
+
+                            <p class="text-sm text-gray-300 leading-relaxed font-light text-justify">
+                                👉 Questo ragionamento è logicamente corretto perché la conclusione segue necessariamente dalle premesse. Se le premesse sono vere, la conclusione non può essere falsa. La forma del ragionamento è valida, indipendentemente dal contenuto specifico.
+                            </p>
+                        </div>
+
+                        <!-- Card: Incorrect Reasoning (Red) -->
+                        <div class="bg-slate-800/40 p-6 rounded-2xl border border-rose-500/30 backdrop-blur-sm flex flex-col gap-4 group hover:bg-slate-800/60 transition duration-300 relative overflow-hidden">
+                            <div class="absolute -top-10 -right-10 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl group-hover:bg-rose-500/20 transition duration-500"></div>
+                            
+                            <div class="flex items-center gap-3 border-b border-rose-500/20 pb-3 mb-2">
+                                <div class="w-10 h-10 rounded-full bg-rose-900/50 flex items-center justify-center border border-rose-500/50">
+                                    <i class="fas fa-times text-rose-400 text-xl"></i>
+                                </div>
+                                <h3 class="font-classic text-xl text-rose-200">Ragionamento Scorretto</h3>
+                            </div>
+
+                            <div class="bg-slate-900/60 p-4 rounded-lg font-mono text-sm border border-rose-500/10 space-y-2 relative">
+                                <!-- Mini SVG Logic Diagram: Intersect/Outside -->
+                                <svg class="absolute top-2 right-2 w-16 h-12 opacity-50" viewBox="0 0 100 80">
+                                    <circle cx="40" cy="40" r="30" fill="none" stroke="#fb7185" stroke-width="2" />
+                                    <circle cx="60" cy="40" r="20" fill="none" stroke="#fb7185" stroke-width="2" />
+                                    <circle cx="20" cy="40" r="3" fill="#fb7185" />
+                                </svg>
+                                <p><span class="text-rose-500">Premessa 1:</span> Tutti i mammiferi sono animali.</p>
+                                <p><span class="text-rose-500">Premessa 2:</span> Il cane è un animale.</p>
+                                <div class="w-full h-px bg-rose-500/30 my-2"></div>
+                                <p><span class="text-rose-400 font-bold">Conclusione:</span> Il cane è un mammifero.</p>
+                            </div>
+
+                            <p class="text-sm text-gray-300 leading-relaxed font-light text-justify">
+                                👉 Questo ragionamento è logicamente scorretto, anche se la conclusione è vera nella realtà. La forma del ragionamento non garantisce che la conclusione derivi dalle premesse: potrebbero esistere animali che non sono mammiferi. Il problema non è il contenuto, ma la struttura logica.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 5: Logica Formale (con Esempio Nemo) -->
+                <div id="intro-slide-5" class="slide-hidden max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mx-auto pb-32">
+                    
+                    <!-- Content Side -->
+                    <div class="space-y-8 order-1">
+                        <div class="inline-flex items-center px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-200 text-xs font-classic tracking-widest mb-2"><i class="fas fa-layer-group mr-2"></i> Astrazione</div>
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-classic text-white leading-tight">Logica <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Formale</span></h2>
+                        
+                        <div class="border-l-4 border-indigo-500 pl-6 py-2 bg-indigo-900/10 rounded-r-lg">
+                            <p class="text-lg md:text-xl text-white font-serif-text italic">
+                                "La logica non chiede se una conclusione sia vera, ma se è giustificata dalle premesse."
+                            </p>
+                        </div>
+
+                        <p class="text-base sm:text-lg text-gray-300 leading-relaxed font-light text-justify">
+                            Per questo si parla di logica formale. Le sue regole sono sintattiche: stabiliscono come costruire correttamente frasi e schemi di inferenza, indipendentemente dal significato specifico delle proposizioni coinvolte. 
+                        </p>
+
+                        <p class="text-base sm:text-lg text-gray-300 leading-relaxed font-light text-justify">
+                            È proprio questa attenzione alla struttura, e non al contenuto, che rende la logica uno strumento fondamentale per la matematica, l’informatica e, più in generale, per ogni sistema di ragionamento automatico.
+                        </p>
+
+                        <div class="flex gap-4 pt-2">
+                            <div class="flex flex-col items-center gap-2 p-3 bg-slate-800/50 rounded-xl border border-white/5 w-24">
+                                <i class="fas fa-square-root-variable text-2xl text-cyan-400"></i>
+                                <span class="text-[10px] uppercase tracking-wide text-slate-400">Mate</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2 p-3 bg-slate-800/50 rounded-xl border border-white/5 w-24">
+                                <i class="fas fa-laptop-code text-2xl text-indigo-400"></i>
+                                <span class="text-[10px] uppercase tracking-wide text-slate-400">Info</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2 p-3 bg-slate-800/50 rounded-xl border border-white/5 w-24">
+                                <i class="fas fa-robot text-2xl text-purple-400"></i>
+                                <span class="text-[10px] uppercase tracking-wide text-slate-400">AI</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Side: Nemo Example Card -->
+                    <div class="relative flex justify-center items-center h-auto order-2 w-full">
+                        <div class="w-full bg-slate-800/40 p-6 rounded-2xl border border-white/10 backdrop-blur-sm shadow-2xl relative overflow-hidden group">
+                            <!-- Decorative fish/flying element glow -->
+                            <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition duration-500"></div>
+                            
+                            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fas fa-fish text-cyan-400"></i> Esempio: Argomento Valido (ma Falso)
+                            </h3>
+
+                            <!-- Syllogism -->
+                            <div class="space-y-2 mb-6 font-mono text-sm bg-slate-900/50 p-4 rounded-lg border border-white/5">
+                                <p><span class="text-blue-400">Premessa 1:</span> Tutti i pesci possono volare.</p>
+                                <p><span class="text-blue-400">Premessa 2:</span> Nemo è un pesce.</p>
+                                <div class="w-full h-px bg-white/10 my-2"></div>
+                                <p><span class="text-indigo-400 font-bold">Conclusione:</span> Nemo può volare.</p>
+                            </div>
+
+                            <!-- Analysis -->
+                            <div class="space-y-4 text-sm">
+                                <div class="flex gap-3 items-start p-2 rounded hover:bg-white/5 transition border-l-2 border-transparent hover:border-emerald-500/50">
+                                    <i class="fas fa-check-circle text-emerald-400 mt-1 shrink-0 text-lg"></i>
+                                    <p class="text-gray-300 leading-snug"><strong class="text-emerald-400 block mb-1">Analisi logica:</strong> La conclusione segue correttamente dalle premesse secondo le regole della logica formale.</p>
+                                </div>
+                                
+                                <div class="flex gap-3 items-start p-2 rounded hover:bg-white/5 transition border-l-2 border-transparent hover:border-rose-500/50">
+                                    <i class="fas fa-times-circle text-rose-400 mt-1 shrink-0 text-lg"></i>
+                                    <p class="text-gray-300 leading-snug"><strong class="text-rose-400 block mb-1">Analisi reale:</strong> Le premesse sono false, quindi la conclusione è falsa nella realtà.</p>
+                                </div>
+
+                                <!-- Insight Box -->
+                                <div class="mt-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex gap-3 items-start">
+                                    <i class="fas fa-lightbulb text-yellow-400 mt-1 shrink-0"></i>
+                                    <p class="text-yellow-100/80 text-xs italic leading-relaxed">
+                                        La logica formale non si interessa se ciò che diciamo è vero nel mondo reale; controlla solo se le conclusioni sono giustificate dalle premesse.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 6: Linguaggio Naturale vs Macchina + Ambiguità -->
+                <div id="intro-slide-6" class="slide-hidden max-w-7xl w-full flex flex-col items-center gap-16 px-4 mx-auto pb-32">
+                    
+                    <!-- SECTION 1: Human vs Computer -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
+                        <!-- Content Side -->
+                        <div class="space-y-8 order-1">
+                            <div class="inline-flex items-center px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-200 text-xs font-classic tracking-widest mb-2">
+                                <i class="fas fa-language mr-2"></i> Comunicazione
+                            </div>
+                            
+                            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-classic text-white leading-tight">
+                                Dal Linguaggio all'<span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Istruzione</span>
+                            </h2>
+
+                            <!-- Human Block -->
+                            <div class="bg-slate-800/30 p-5 rounded-xl border-l-4 border-yellow-500">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-brain text-yellow-400 text-xl"></i>
+                                    <h3 class="text-lg font-bold text-white">L'Essere Umano</h3>
+                                </div>
+                                <p class="text-sm text-gray-300 leading-relaxed font-light text-justify">
+                                    Il punto di partenza per comprendere l’informatica e la logica matematica è accettare un fatto fondamentale: il linguaggio umano, detto anche linguaggio naturale, non è progettato per essere interpretato in modo univoco dalle macchine. Noi esseri umani siamo estremamente abili nel usare il contesto, l’intuizione e il “non detto” per comprendere una frase. Spesso completiamo automaticamente le informazioni mancanti e scegliamo l’interpretazione più plausibile senza neppure rendercene conto.
+                                </p>
+                            </div>
+
+                            <!-- Computer Block -->
+                            <div class="bg-slate-800/30 p-5 rounded-xl border-l-4 border-cyan-500">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-microchip text-cyan-400 text-xl"></i>
+                                    <h3 class="text-lg font-bold text-white">Il Computer</h3>
+                                </div>
+                                <p class="text-sm text-gray-300 leading-relaxed font-light text-justify">
+                                    Un computer, invece, non possiede queste capacità: non intuisce, non interpreta, non “immagina” cosa intendiamo dire. Può solo eseguire istruzioni che siano precise, esplicite e prive di ambiguità.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Visual Side: Filter SVG -->
+                        <div class="relative flex justify-center items-center h-[300px] md:h-[450px] order-2 bg-slate-800/30 rounded-2xl border border-white/5 p-2 backdrop-blur-sm overflow-hidden group w-full">
+                            <p class="absolute top-4 right-6 text-xs text-white/70 font-mono z-20 bg-black/50 px-2 py-1 rounded">fig_1.3: Filtro Logico</p>
+                            <svg viewBox="0 0 400 500" class="w-full h-full drop-shadow-2xl">
+                                <path d="M100 50 Q150 20 200 50 T300 50" fill="none" stroke="#fbbf24" stroke-width="3" opacity="0.8">
+                                    <animate attributeName="d" values="M100 50 Q150 20 200 50 T300 50; M100 50 Q150 80 200 50 T300 50; M100 50 Q150 20 200 50 T300 50" dur="4s" repeatCount="indefinite" />
+                                </path>
+                                <path d="M100 80 Q150 110 200 80 T300 80" fill="none" stroke="#fbbf24" stroke-width="3" opacity="0.6">
+                                    <animate attributeName="d" values="M100 80 Q150 110 200 80 T300 80; M100 80 Q150 50 200 80 T300 80; M100 80 Q150 110 200 80 T300 80" dur="5s" repeatCount="indefinite" />
+                                </path>
+                                <text x="200" y="120" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="12" opacity="0.8">"Linguaggio Naturale"</text>
+                                <path d="M100 150 L300 150 L230 300 L170 300 Z" fill="url(#gradFunnel)" stroke="#6366f1" stroke-width="2" opacity="0.9" />
+                                <defs>
+                                    <linearGradient id="gradFunnel" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.6" />
+                                        <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9" />
+                                    </linearGradient>
+                                </defs>
+                                <g transform="translate(200, 220)">
+                                    <circle r="20" fill="none" stroke="#fff" stroke-width="1" stroke-dasharray="2,2">
+                                        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="10s" repeatCount="indefinite" />
+                                    </circle>
+                                    <text x="0" y="5" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">&</text>
+                                </g>
+                                <rect x="185" y="320" width="30" height="30" fill="#22d3ee" stroke="#fff" stroke-width="1">
+                                    <animate attributeName="y" values="300;450" dur="3s" repeatCount="indefinite" />
+                                    <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" />
+                                </rect>
+                                <rect x="185" y="320" width="30" height="30" fill="#22d3ee" stroke="#fff" stroke-width="1">
+                                    <animate attributeName="y" values="300;450" dur="3s" begin="1.5s" repeatCount="indefinite" />
+                                    <animate attributeName="opacity" values="0;1;0" dur="3s" begin="1.5s" repeatCount="indefinite" />
+                                </rect>
+                                <text x="200" y="480" text-anchor="middle" fill="#22d3ee" font-family="monospace" font-size="12">IF (X) THEN (Y)</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: Semantic Ambiguity -->
+                    <div class="w-full flex flex-col items-center gap-8 border-t border-white/10 pt-16 mt-8">
+                        
+                        <div class="text-center space-y-4 max-w-3xl">
+                            <h2 class="text-2xl sm:text-3xl font-bold font-classic text-white leading-tight">L'Ambiguità <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">Semantica</span></h2>
+                            <p class="text-base sm:text-lg text-gray-300 leading-relaxed font-light">
+                                Uno dei problemi più evidenti del linguaggio naturale è l’ambiguità semantica, che si verifica quando una frase, pur essendo grammaticalmente corretta, può essere interpretata in più modi.
+                            </p>
+                        </div>
+
+                        <!-- The Ambiguous Sentence Block -->
+                        <div class="w-full max-w-2xl bg-slate-800/60 p-6 rounded-2xl border border-white/10 text-center relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5"></div>
+                            <p class="text-xs text-orange-300 uppercase tracking-widest mb-2 font-mono">Esempio Classico</p>
+                            <h3 class="text-2xl md:text-3xl font-serif-text italic text-white">"Ho visto un uomo col binocolo."</h3>
+                        </div>
+
+                        <!-- Image Placeholders for Interpretations -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
+                            
+                            <!-- Interpretation 1 -->
+                            <div class="flex flex-col gap-4">
+                                <!-- PLACEHOLDER IMMAGINE 1 -->
+                                <div class="h-64 w-full bg-slate-900/50 rounded-lg border-2 border-dashed border-slate-600 flex items-center justify-center relative overflow-hidden group hover:border-cyan-500 transition duration-300">
+                                     <!-- Sostituisci src con la tua immagine -->
+                                     <img src="binocolo_1.jpg" 
+                                          alt="Interpretazione 1" 
+                                          class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-100 transition duration-500"
+                                          onerror="this.style.display='none'">
+                                     <span class="text-slate-400 z-10 font-mono text-sm pointer-events-none group-hover:text-cyan-400 transition">Inserire Img: Io uso il binocolo</span>
+                                </div>
+                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                                    <h4 class="text-lg font-bold text-cyan-200 mb-1">Interpretazione A</h4>
+                                    <p class="text-sm text-gray-300">
+                                        Io ho usato il binocolo per osservare l’uomo.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Interpretation 2 -->
+                            <div class="flex flex-col gap-4">
+                                <!-- PLACEHOLDER IMMAGINE 2 -->
+                                <div class="h-64 w-full bg-slate-900/50 rounded-lg border-2 border-dashed border-slate-600 flex items-center justify-center relative overflow-hidden group hover:border-purple-500 transition duration-300">
+                                     <!-- Sostituisci src con la tua immagine -->
+                                     <img src="binocolo_2.jpg" 
+                                          alt="Interpretazione 2" 
+                                          class="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-100 transition duration-500"
+                                          onerror="this.style.display='none'">
+                                     <span class="text-slate-400 z-10 font-mono text-sm pointer-events-none group-hover:text-purple-400 transition">Inserire Img: Lui ha il binocolo</span>
+                                </div>
+                                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                                    <h4 class="text-lg font-bold text-purple-200 mb-1">Interpretazione B</h4>
+                                    <p class="text-sm text-gray-300">
+                                        Ho visto un uomo che aveva con sé, o indossava, un binocolo.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conclusion Box -->
+                        <div class="p-6 rounded-lg bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border-l-4 border-indigo-500 text-center max-w-4xl">
+                            <p class="text-gray-200 leading-relaxed">
+                                Per un essere umano il contesto spesso risolve automaticamente l’ambiguità. Per un sistema informatico, invece, questa incertezza rappresenta un ostacolo serio e può portare a risultati errati. 
+                                <br><strong class="text-white">La logica formale affronta il problema imponendo una riscrittura delle frasi in una forma che ammetta una sola interpretazione possibile.</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Slide 7: Formalizzazione e Wittgenstein -->
+                <div id="intro-slide-7" class="slide-hidden max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mx-auto pb-32">
+                    
+                    <!-- Content Side -->
+                    <div class="space-y-8 order-1">
+                        <div class="inline-flex items-center px-3 py-1 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-200 text-xs font-classic tracking-widest mb-2">
+                            <i class="fas fa-project-diagram mr-2"></i> Filosofia del Linguaggio
+                        </div>
+                        
+                        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold font-classic text-white leading-tight">
+                            La Sfida della <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-500">Formalizzazione</span>
+                        </h2>
+
+                        <div class="bg-slate-800/30 p-6 rounded-xl border border-white/5 space-y-4">
+                            <p class="text-sm sm:text-base text-gray-300 leading-relaxed font-light text-justify">
+                                La transizione dal linguaggio naturale — ricco, flessibile ed espressivo, ma inevitabilmente ambiguo — alla rigidità dei linguaggi formali costituisce una delle sfide intellettuali più profonde della logica matematica, dell’informatica teorica e della filosofia del linguaggio.
+                            </p>
+                            <p class="text-sm sm:text-base text-gray-300 leading-relaxed font-light text-justify">
+                                Questo processo, chiamato <strong class="text-white">formalizzazione</strong>, non consiste semplicemente nel sostituire parole con simboli, ma richiede un’analisi accurata della struttura del pensiero stesso.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Visual Side: Wittgenstein & Mirror Concept -->
+                    <div class="relative flex flex-col items-center gap-6 order-2 w-full">
+                        
+                        <!-- Wittgenstein Card -->
+                        <div class="w-full bg-slate-800/40 p-6 rounded-2xl border border-white/10 backdrop-blur-sm relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-bl-full blur-2xl group-hover:bg-teal-500/20 transition duration-500"></div>
+                            
+                            <div class="flex items-start gap-4">
+                                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-white/20 shrink-0">
+                                    <!-- Wittgenstein Image Placeholder -->
+                                    <img src="https://upload.wikimedia.org/wikipedia/en/b/b2/Ludwig_Wittgenstein.jpg" 
+                                         alt="Ludwig Wittgenstein" 
+                                         class="w-full h-full object-cover filter grayscale contrast-125 sepia-[0.2]"
+                                         onerror="this.src='https://placehold.co/200x200/1e293b/ffffff?text=Wittgenstein'">
+                                </div>
+                                <div>
+                                    <h3 class="font-classic text-xl text-white mb-1">Ludwig Wittgenstein</h3>
+                                    <p class="text-xs text-teal-300 mb-3">Tractatus Logico-Philosophicus</p>
+                                    <p class="text-sm text-gray-300 italic leading-relaxed">
+                                        "La proposizione logica aspira a essere un’immagine dei fatti."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- The "Mirror" SVG Animation -->
+                        <div class="relative w-full h-48 sm:h-64 bg-slate-900/50 rounded-xl border border-white/5 flex items-center justify-center overflow-hidden">
+                            <p class="absolute top-2 right-4 text-[10px] text-gray-500 font-mono">fig_1.4: Lo Specchio Logico</p>
+                            
+                            <svg viewBox="0 0 300 150" class="w-full h-full">
+                                <defs>
+                                    <linearGradient id="mirrorGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.1" />
+                                        <stop offset="50%" stop-color="#2dd4bf" stop-opacity="0" />
+                                    </linearGradient>
+                                </defs>
+
+                                <!-- Top: The "Real" Shape (Organic) -->
+                                <path d="M120 50 Q135 20 150 50 T180 50 T210 50" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round">
+                                    <animate attributeName="d" values="M120 50 Q135 20 150 50 T180 50 T210 50; M120 50 Q135 80 150 50 T180 50 T210 50; M120 50 Q135 20 150 50 T180 50 T210 50" dur="6s" repeatCount="indefinite" />
+                                </path>
+                                <text x="165" y="30" text-anchor="middle" fill="#fbbf24" font-size="8" opacity="0.7">REALTÀ (Fatti)</text>
+
+                                <!-- The Mirror Surface -->
+                                <rect x="50" y="70" width="230" height="1" fill="#475569" opacity="0.5" />
+
+                                <!-- Bottom: The "Logical" Reflection (Geometric) -->
+                                <path d="M120 90 L135 120 L150 90 L180 90 L210 90" fill="none" stroke="#2dd4bf" stroke-width="2">
+                                    <animate attributeName="d" values="M120 90 L135 120 L150 90 L180 90 L210 90; M120 90 L135 60 L150 90 L180 90 L210 90; M120 90 L135 120 L150 90 L180 90 L210 90" dur="6s" repeatCount="indefinite" />
+                                </path>
+                                <text x="165" y="140" text-anchor="middle" fill="#2dd4bf" font-size="8" opacity="0.7">LOGICA (Immagine)</text>
+
+                                <!-- Projection Lines -->
+                                <line x1="135" y1="50" x2="135" y2="90" stroke="#fff" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3" />
+                                <line x1="150" y1="50" x2="150" y2="90" stroke="#fff" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3" />
+                                <line x1="180" y1="50" x2="180" y2="90" stroke="#fff" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3" />
+                            </svg>
+                        </div>
+
+                        <p class="text-sm text-gray-400 text-center px-4">
+                            Una rappresentazione in cui la struttura del linguaggio rispecchia, in modo rigoroso, la struttura della realtà che si intende descrivere.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- FIXED CONTROLS (ARROWS ON SIDES) -->
+    <div id="slide-controls" class="fixed inset-0 z-50 hidden pointer-events-none fade-in">
+        <button onclick="changeSlide(-1)" class="absolute top-1/2 left-2 md:left-4 transform -translate-y-1/2 w-12 h-12 rounded-full bg-slate-700/80 hover:bg-cyan-600 text-white flex items-center justify-center transition border border-white/10 hover:border-cyan-400 backdrop-blur-md shadow-xl hover:scale-110 active:scale-95 pointer-events-auto">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button onclick="changeSlide(1)" class="absolute top-1/2 right-2 md:right-4 transform -translate-y-1/2 w-12 h-12 rounded-full bg-slate-700/80 hover:bg-cyan-600 text-white flex items-center justify-center transition border border-white/10 hover:border-cyan-400 backdrop-blur-md shadow-xl hover:scale-110 active:scale-95 pointer-events-auto">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <!-- Dots -->
+        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-slate-800/80 rounded-full backdrop-blur-md border border-white/5 shadow-xl pointer-events-auto">
+            <span id="dot-1" class="w-2 h-2 rounded-full bg-cyan-400 transition-all duration-300"></span>
+            <span id="dot-2" class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-300"></span>
+            <span id="dot-3" class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-300"></span>
+            <span id="dot-4" class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-300"></span>
+            <span id="dot-5" class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-300"></span>
+            <span id="dot-6" class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-300"></span>
+            <span id="dot-7" class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-300"></span>
+        </div>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const desktopBtn = document.getElementById('desktop-menu-btn');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+        mobileBtn.addEventListener('click', toggleMenu);
+        desktopBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+
+        function showView(viewName) {
+            const homeView = document.getElementById('view-home');
+            const introView = document.getElementById('view-intro');
+            const controls = document.getElementById('slide-controls');
+            const btnHome = document.getElementById('btn-home');
+            const btnIntro = document.getElementById('btn-intro');
+            const mainContainer = document.getElementById('main-container');
+
+            const activeClass = "bg-indigo-600/30 border-indigo-500/50 text-white";
+            const inactiveClass = "hover:bg-white/5 text-gray-300 hover:text-white";
+            const setBtn = (btn, isActive) => { btn.className = `w-full flex items-center p-3 rounded-lg transition-all text-left ${isActive ? activeClass + ' border' : inactiveClass}`; };
+
+            if (viewName === 'home') {
+                homeView.classList.remove('hidden');
+                introView.classList.add('hidden');
+                controls.classList.add('hidden');
+                setBtn(btnHome, true); setBtn(btnIntro, false);
+                mainContainer.scrollTo(0, 0); 
+            } else if (viewName === 'intro') {
+                homeView.classList.add('hidden');
+                introView.classList.remove('hidden');
+                controls.classList.remove('hidden');
+                setBtn(btnHome, false); setBtn(btnIntro, true);
+                mainContainer.scrollTo(0, 0); 
+            }
+            if (isMenuOpen) toggleMenu(); // Fix: Menu chiude sempre
+        }
+
+        let currentSlide = 1;
+        const totalSlides = 7; // Updated to 7
+
+        function changeSlide(direction) {
+            const introView = document.getElementById('view-intro');
+            if (introView.classList.contains('hidden')) return;
+
+            const nextSlide = currentSlide + direction;
+            if (nextSlide >= 1 && nextSlide <= totalSlides) {
+                // Hide current
+                const currentEl = document.getElementById(`intro-slide-${currentSlide}`);
+                currentEl.classList.remove('slide-active');
+                currentEl.classList.add('slide-hidden');
+                document.getElementById(`dot-${currentSlide}`).classList.replace('bg-cyan-400', 'bg-slate-600');
+
+                // Show next
+                currentSlide = nextSlide;
+                const nextEl = document.getElementById(`intro-slide-${currentSlide}`);
+                nextEl.classList.remove('slide-hidden');
+                nextEl.classList.add('slide-active');
+                document.getElementById(`dot-${currentSlide}`).classList.replace('bg-slate-600', 'bg-cyan-400');
+
+                document.getElementById('main-container').scrollTop = 0; 
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const introView = document.getElementById('view-intro');
+            if (!introView.classList.contains('hidden')) {
+                if (e.key === "ArrowRight") changeSlide(1);
+                if (e.key === "ArrowLeft") changeSlide(-1);
+            }
+        });
+    </script>
+</body>
+</html>
