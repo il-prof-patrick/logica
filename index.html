@@ -235,13 +235,7 @@
                      class="ml-3">Logica predicativa - Pratica</span>
                </button>
             </li>
-            <li>
-               <button onclick="showView('symbolic-ai')" id="btn-symbolic-ai"
-                  class="w-full flex items-center p-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition group text-left">
-                  <i class="fas fa-brain w-8 text-gray-500 group-hover:text-purple-400 transition"></i><span
-                     class="ml-3">IA Simbolica</span>
-               </button>
-            </li>
+
          </ul>
       </div>
       <div class="pb-8 text-center text-sm text-gray-500">
@@ -8006,7 +8000,7 @@
          const btnPractice = document.getElementById('btn-practice');
          const btnPredTheory = document.getElementById('btn-predicates-theory');
          const btnPredPractice = document.getElementById('btn-predicates-practice');
-         const btnSymbolicAI = document.getElementById('btn-symbolic-ai');
+
          const activeClass = "bg-indigo-600/30 border-indigo-500/50 text-white";
          const inactiveClass = "hover:bg-white/5 text-gray-300 hover:text-white";
          const setBtn = (btn, isActive) => {
@@ -8020,7 +8014,7 @@
          setBtn(btnPractice, viewName === 'practice');
          setBtn(btnPredTheory, viewName === 'predicates-theory');
          setBtn(btnPredPractice, viewName === 'predicates-practice');
-         setBtn(btnSymbolicAI, viewName === 'symbolic-ai');
+
 
          initMasonry();
 
